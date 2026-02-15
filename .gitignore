@@ -3,6 +3,7 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+logs/
 cache/
 node_modules/
 
@@ -212,3 +213,7 @@ __marimo__/
 # Claude Code
 .claude/
 .claude_index/
+
+# Cloudflare Worker
+worker/.wrangler/
+worker/.dev.vars
