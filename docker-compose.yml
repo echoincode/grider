@@ -13,6 +13,7 @@ services:
       - FLASK_PORT=5000
     env_file:
       - .env
+    user: root
     volumes:
       # 挂载日志目录（可选）
       - ./logs:/app/backend/logs

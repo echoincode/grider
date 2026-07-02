@@ -177,14 +177,10 @@ ETF_POPULAR_LIST: Final[list] = [
 
 # 常用资金
 CAPITAL_PRESETS: Final[list] = [
-    {'value': 100000, 'label': '10万', 'popular': True},
-    {'value': 200000, 'label': '20万', 'popular': True},
-    {'value': 300000, 'label': '30万', 'popular': False},
-    {'value': 500000, 'label': '50万', 'popular': True},
-    {'value': 800000, 'label': '80万', 'popular': False},
-    {'value': 1000000, 'label': '100万', 'popular': True},
-    {'value': 1500000, 'label': '150万', 'popular': False},
-    {'value': 2000000, 'label': '200万', 'popular': False}
+    {'value': 10000, 'label': '1万', 'popular': True},
+    {'value': 20000, 'label': '2万', 'popular': True},
+    {'value': 50000, 'label': '5万', 'popular': True},
+    {'value': 100000, 'label': '10万', 'popular': True}
 ]
 
 # ============================================================================

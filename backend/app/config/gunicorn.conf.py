@@ -22,8 +22,8 @@ preload_app = True
 reuse_port = True
 
 # 日志配置
-accesslog = "/app/backend/logs/access.log"
-errorlog = "/app/backend/logs/error.log"
+accesslog = os.getenv('GUNICORN_ACCESS_LOG', '/app/backend/logs/access.log')
+errorlog = os.getenv('GUNICORN_ERROR_LOG', '/app/backend/logs/error.log')
 loglevel = os.getenv('LOG_LEVEL', 'info').lower()
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 

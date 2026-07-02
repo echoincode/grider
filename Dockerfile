@@ -31,6 +31,7 @@ VOLUME /app/backend/logs
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制Python依赖文件
@@ -59,9 +60,6 @@ RUN chmod +x entrypoint.sh
 # 创建日志目录
 RUN mkdir -p /app/backend/logs && chown -R app:app /app/backend/logs
 RUN mkdir -p /app/backend/cache && chown -R app:app /app/backend/cache
-
-# 切换到非root用户
-USER app
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

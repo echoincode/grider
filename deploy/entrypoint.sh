@@ -14,6 +14,16 @@ PORT=${FLASK_PORT:-5000}
 # 创建必要目录
 mkdir -p /app/backend/logs /app/backend/cache
 
+# 修复挂载目录权限问题
+# 当使用 docker-compose 挂载卷时，挂载目录的权限可能被宿主机覆盖
+# 确保 app 用户拥有这些目录的写权限
+if [ "$(id -u)" = "0" ]; then
+    echo "🔧 修复挂载目录权限..."
+    chown -R app:app /app/backend/logs /app/backend/cache 2>/dev/null || true
+    echo "🔧 切换到 app 用户..."
+    exec gosu app "$0" "$@"
+fi
+
 # 切换到backend目录以解决模块导入问题
 cd /app/backend
 
