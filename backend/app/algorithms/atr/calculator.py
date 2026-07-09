@@ -129,11 +129,64 @@ class ATRCalculator:
             # 2. 计算ATR
             df = self.calculate_atr(df)
             
+            # 3. 计算多周期融合ATR
+            df = self.calculate_multi_period_atr(df)
+            
             logger.info("ATR数据处理完成")
             return df
             
         except Exception as e:
             logger.error(f"ATR数据处理失败: {str(e)}")
+            raise
+
+    def calculate_multi_period_atr(self, df: pd.DataFrame, 
+                                   periods: list = None, 
+                                   weights: list = None) -> pd.DataFrame:
+        """
+        计算多周期融合ATR
+        
+        Args:
+            df: 已包含TR列的DataFrame
+            periods: 周期列表，默认[5, 14, 50]
+            weights: 权重列表，默认[0.2, 0.5, 0.3]
+            
+        Returns:
+            添加了多周期ATR列的DataFrame
+        """
+        try:
+            if periods is None:
+                periods = [5, 14, 50]
+            if weights is None:
+                weights = [0.2, 0.5, 0.3]
+            
+            # 验证权重和为1
+            if abs(sum(weights) - 1.0) > 0.001:
+                raise ValueError("权重之和必须为1")
+            
+            if len(periods) != len(weights):
+                raise ValueError("周期数和权重数必须相等")
+            
+            # 计算各周期ATR
+            atr_columns = []
+            for period in periods:
+                col_name = f'ATR_{period}'
+                df[col_name] = df['tr'].rolling(window=period, min_periods=1).mean()
+                atr_columns.append(col_name)
+            
+            # 计算融合ATR（加权平均）
+            df['composite_atr'] = 0.0
+            for col, weight in zip(atr_columns, weights):
+                df['composite_atr'] += df[col] * weight
+            
+            # 计算融合ATR比率
+            df['composite_atr_ratio'] = df['composite_atr'] / df['close'].rolling(window=self.period, min_periods=1).mean()
+            df['composite_atr_pct'] = df['composite_atr_ratio'] * 100
+            
+            logger.info(f"多周期ATR计算完成，周期: {periods}，权重: {weights}")
+            return df
+            
+        except Exception as e:
+            logger.error(f"多周期ATR计算失败: {str(e)}")
             raise
 
 def calculate_volatility(df: pd.DataFrame) -> float:

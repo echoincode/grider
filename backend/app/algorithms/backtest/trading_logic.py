@@ -14,16 +14,34 @@ from datetime import datetime
 class TradingLogic:
     """网格交易逻辑"""
 
-    def __init__(self, grid_config: dict, fee_calculator: FeeCalculator, country: str = 'CHN'):
+    def __init__(self, grid_config: dict, fee_calculator: FeeCalculator, 
+                 country: str = 'CHN', slippage_rate: float = 0.001):
         self.grid_config = grid_config
         self.fee_calc = fee_calculator
         self.grid_type = grid_config['type']
         self.step_size = grid_config.get('step_size', 0)
         self.step_ratio = grid_config.get('step_ratio', 0)
         self.single_quantity = grid_config['single_trade_quantity']
+        self.slippage_rate = slippage_rate
 
         # 获取最小交易单位（复用GridOptimizer的逻辑）
         self.min_trade_unit = 1 if country == 'USA' else 100
+
+    def _apply_slippage(self, price: float, trade_type: str) -> float:
+        """
+        应用滑点
+
+        Args:
+            price: 理论交易价格
+            trade_type: 交易类型 ('BUY' 或 'SELL')
+
+        Returns:
+            滑点后的实际交易价格
+        """
+        if trade_type == 'BUY':
+            return price * (1 + self.slippage_rate)
+        else:
+            return price * (1 - self.slippage_rate)
 
     def initialize_empty_position(self, base_price: float, total_capital: float,
                                  price_lower: float, price_upper: float) -> BacktestState:
@@ -80,16 +98,18 @@ class TradingLogic:
 
         if deviation > 0:
             # 触发N倍买入
+            buy_price = self._apply_slippage(actual_price, 'BUY')
             for _ in range(deviation):
                 if state.cash >= self.fee_calc.calculate_buy_cost(
-                    actual_price, self.single_quantity):
-                    state, record = self._execute_buy(state, actual_price)
+                    buy_price, self.single_quantity):
+                    state, record = self._execute_buy(state, buy_price)
                     records.append(record)
         elif deviation < 0:
             # 触发|N|倍卖出
+            sell_price = self._apply_slippage(actual_price, 'SELL')
             for _ in range(abs(deviation)):
                 if state.position >= self.single_quantity:
-                    state, record = self._execute_sell(state, actual_price)
+                    state, record = self._execute_sell(state, sell_price)
                     records.append(record)
 
         return state, records
@@ -129,13 +149,16 @@ class TradingLogic:
             # 交易价格：使用K线均价 (最高+最低+开盘+收盘)/4
             trade_price = (kbar.high + kbar.low + kbar.open + kbar.close) / 4
 
+            # 应用滑点（买入价格更高）
+            actual_price = self._apply_slippage(trade_price, 'BUY')
+
             # 交易数量 = 单笔数量 × (1 + 倍数)
             quantity = self.single_quantity * (1 + deviation)
 
-            # 检查资金是否充足
-            required_cash = self.fee_calc.calculate_buy_cost(trade_price, quantity)
+            # 检查资金是否充足（使用滑点后的价格计算成本）
+            required_cash = self.fee_calc.calculate_buy_cost(actual_price, quantity)
             if state.cash >= required_cash:
-                return self._execute_buy(state, trade_price, quantity)
+                return self._execute_buy(state, actual_price, quantity)
 
         # 4. 买入不满足，判断卖出：K线最高价 >= 下一卖点
         elif kbar.high >= next_sell_price:
@@ -153,12 +176,15 @@ class TradingLogic:
             # 交易价格：使用K线均价 (最高+最低+开盘+收盘)/4
             trade_price = (kbar.high + kbar.low + kbar.open + kbar.close) / 4
 
+            # 应用滑点（卖出价格更低）
+            actual_price = self._apply_slippage(trade_price, 'SELL')
+
             # 交易数量 = 单笔数量 × (1 + 倍数)
             quantity = self.single_quantity * (1 + deviation)
 
             # 检查持仓是否充足
             if state.position >= quantity:
-                return self._execute_sell(state, trade_price, quantity)
+                return self._execute_sell(state, actual_price, quantity)
 
         # 未触发网格点，不交易
         return state, None
@@ -259,10 +285,13 @@ class TradingLogic:
             (初始状态, 底仓交易记录或None)
         """
         # 1. 计算第一根K线均价
-        purchase_price = (first_kbar.high + first_kbar.low +
-                         first_kbar.open + first_kbar.close) / 4
+        theoretical_price = (first_kbar.high + first_kbar.low +
+                           first_kbar.open + first_kbar.close) / 4
 
-        # 2. 检查购买价格是否在自定义价格区间内
+        # 2. 应用滑点（买入价格更高）
+        purchase_price = self._apply_slippage(theoretical_price, 'BUY')
+
+        # 3. 检查购买价格是否在自定义价格区间内
         if purchase_price < price_lower or purchase_price > price_upper:
             import logging
             logger = logging.getLogger(__name__)
@@ -271,11 +300,11 @@ class TradingLogic:
                 total_capital, strategy_base_price, price_lower, price_upper, first_kbar.close
             )
 
-        # 3. 计算可购买股数（使用self.min_trade_unit）
+        # 4. 计算可购买股数（使用self.min_trade_unit）
         theoretical_shares = base_position_amount / purchase_price
         shares = int(theoretical_shares / self.min_trade_unit) * self.min_trade_unit
 
-        # 4. 检查资金充足性
+        # 5. 检查资金充足性
         if shares < self.min_trade_unit:
             # 资金不足，降级为0底仓
             import logging
@@ -285,10 +314,10 @@ class TradingLogic:
                 total_capital, strategy_base_price, price_lower, price_upper, first_kbar.close
             )
 
-        # 5. 计算实际成本（含手续费）
+        # 6. 计算实际成本（含手续费）
         cost = self.fee_calc.calculate_buy_cost(purchase_price, shares)
 
-        # 6. 验证资金安全
+        # 7. 验证资金安全
         if cost > total_capital:
             import logging
             logger = logging.getLogger(__name__)
@@ -297,7 +326,7 @@ class TradingLogic:
                 total_capital, strategy_base_price, price_lower, price_upper, first_kbar.close
             )
 
-        # 7. 创建初始状态
+        # 8. 创建初始状态
         cash = total_capital - cost
         position = shares
 
@@ -318,7 +347,7 @@ class TradingLogic:
             price_upper=price_upper
         )
 
-        # 8. 创建交易记录
+        # 9. 创建交易记录
         commission = cost - purchase_price * shares
         record = TradeRecord(
             time=first_kbar.time,

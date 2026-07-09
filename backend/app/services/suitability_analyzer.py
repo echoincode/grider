@@ -296,8 +296,9 @@ class SuitabilityAnalyzer:
             # 成交量稳定性（变异系数）
             volume_stability = df['volume'].std() / df['volume'].mean()  # 变异系数
             
-            # 3. 各维度评估
-            amplitude_eval = self.evaluate_amplitude(atr_analysis['current_atr_ratio'])
+            # 3. 各维度评估（优先使用融合ATR比率）
+            atr_ratio_for_eval = atr_analysis.get('composite_atr_ratio', atr_analysis['current_atr_ratio'])
+            amplitude_eval = self.evaluate_amplitude(atr_ratio_for_eval)
             volatility_eval = self.evaluate_volatility(volatility)
             market_eval = self.evaluate_market_characteristics(adx_value)
             liquidity_eval = self.evaluate_liquidity(avg_amount, volume_stability)

@@ -364,7 +364,8 @@ class ETFAnalysisService:
             网格策略参数
         """
         try:
-            atr_ratio = atr_analysis['current_atr_ratio']
+            # 优先使用多周期融合ATR比率，如果不存在则回退到单周期
+            atr_ratio = atr_analysis.get('composite_atr_ratio', atr_analysis['current_atr_ratio'])
 
             current_price = float(latest_price_info['current_price'])
             

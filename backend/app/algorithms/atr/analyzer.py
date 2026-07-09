@@ -49,6 +49,17 @@ class ATRAnalyzer:
                 'period': self.calculator.period
             }
             
+            # 添加多周期融合ATR指标（如果存在）
+            if 'composite_atr_ratio' in df.columns:
+                atr_stats['composite_atr_ratio'] = float(latest_data['composite_atr_ratio'])
+                atr_stats['composite_atr_pct'] = float(latest_data['composite_atr_pct'])
+                atr_stats['composite_atr'] = float(latest_data['composite_atr'])
+                
+                # 多周期趋势分析
+                recent_composite = df['composite_atr_ratio'].tail(30).mean()
+                historical_composite = df['composite_atr_ratio'].head(-30).mean() if len(df) > 60 else recent_composite
+                atr_stats['composite_atr_trend'] = 'increasing' if recent_composite > historical_composite else 'decreasing'
+            
             # ATR趋势分析
             recent_atr = df['atr_ratio'].tail(30).mean()  # 最近30天平均
             historical_atr = df['atr_ratio'].head(-30).mean()  # 历史平均

@@ -54,3 +54,4 @@ class BacktestConfig:
     min_commission: float = 5.0        # 最低收费
     risk_free_rate: float = 0.03       # 无风险利率
     trading_days_per_year: int = 244   # 年交易日数
+    slippage_rate: float = 0.001       # 滑点率（默认0.1%）

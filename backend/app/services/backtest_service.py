@@ -147,7 +147,8 @@ class BacktestService:
             commission_rate=backtest_config.get('commissionRate', 0.0002),
             min_commission=backtest_config.get('minCommission', 5.0),
             risk_free_rate=backtest_config.get('riskFreeRate', 0.03),
-            trading_days_per_year=backtest_config.get('tradingDaysPerYear', 244)
+            trading_days_per_year=backtest_config.get('tradingDaysPerYear', 244),
+            slippage_rate=backtest_config.get('slippageRate', 0.001)
         )
 
     def _apply_custom_grid_params(self, grid_strategy: dict, custom_grid_params: dict, country: str = 'CHN') -> dict:

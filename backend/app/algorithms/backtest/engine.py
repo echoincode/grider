@@ -25,11 +25,12 @@ class BacktestEngine:
             min_commission=backtest_config.min_commission
         )
 
-        # 初始化交易逻辑（传递country参数）
+        # 初始化交易逻辑（传递country参数和滑点率）
         self.trading_logic = TradingLogic(
             grid_config=grid_strategy['grid_config'],
             fee_calculator=self.fee_calc,
-            country=country  # 传递country参数
+            country=country,
+            slippage_rate=backtest_config.slippage_rate
         )
 
         # 状态追踪

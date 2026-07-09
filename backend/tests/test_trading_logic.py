@@ -28,13 +28,13 @@ class TestTradingLogic:
 
     @pytest.fixture
     def logic_chn(self, grid_config, fee_calc):
-        """A股交易逻辑"""
-        return TradingLogic(grid_config, fee_calc, country='CHN')
+        """A股交易逻辑（无滑点）"""
+        return TradingLogic(grid_config, fee_calc, country='CHN', slippage_rate=0.0)
 
     @pytest.fixture
     def logic_usa(self, grid_config, fee_calc):
-        """美股交易逻辑"""
-        return TradingLogic(grid_config, fee_calc, country='USA')
+        """美股交易逻辑（无滑点）"""
+        return TradingLogic(grid_config, fee_calc, country='USA', slippage_rate=0.0)
 
     def test_init_country_chn(self, logic_chn):
         """测试A股市场初始化"""
