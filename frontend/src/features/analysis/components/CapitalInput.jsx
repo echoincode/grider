@@ -7,10 +7,13 @@ import { DollarSign } from "lucide-react";
  */
 export default function CapitalInput({ value, onChange, error, presets = [] }) {
   const defaultPresets = [
+    { value: 1000, label: "1千", popular: true },
+    { value: 3000, label: "3千", popular: true },
+    { value: 5000, label: "5千", popular: true },
+    { value: 10000, label: "1万", popular: true },
+    { value: 20000, label: "2万", popular: true },
+    { value: 50000, label: "5万", popular: true },
     { value: 100000, label: "10万", popular: true },
-    { value: 200000, label: "20万", popular: true },
-    { value: 500000, label: "50万", popular: true },
-    { value: 1000000, label: "100万", popular: true },
   ];
 
   const capitalPresets = presets.length > 0 ? presets : defaultPresets;
@@ -52,13 +55,13 @@ export default function CapitalInput({ value, onChange, error, presets = [] }) {
           type="number"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="请输入投资金额（1万-100万）"
+          placeholder="请输入投资金额（1千-100万）"
           className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             error ? "border-red-300" : "border-gray-300"
           }`}
-          min={10000}
+          min={1000}
           max={1000000}
-          step={10000}
+          step={1000}
         />
         <div className="absolute right-3 top-3 text-gray-400">元</div>
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}

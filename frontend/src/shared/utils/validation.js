@@ -31,8 +31,8 @@ export const validateCapital = (amount) => {
     return { isValid: false, error: "请输入有效的投资金额" };
   }
 
-  if (amount < 10000) {
-    return { isValid: false, error: "投资金额不能少于1万元" };
+  if (amount < 1000) {
+    return { isValid: false, error: "投资金额不能少于1000元" };
   }
 
   if (amount > 1000000) {

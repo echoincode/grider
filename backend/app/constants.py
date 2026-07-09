@@ -103,7 +103,7 @@ GRID_ANALYZE_RULES: Final[list] = [
     {'type': 'required', 'field': 'totalCapital'},
     {'type': 'required', 'field': 'gridType'},
     {'type': 'required', 'field': 'riskPreference'},
-    {'type': 'integer', 'field': 'totalCapital', 'min_value': 10000, 'max_value': 1000000},
+    {'type': 'integer', 'field': 'totalCapital', 'min_value': 1000, 'max_value': 1000000},
     {'type': 'enum', 'field': 'gridType', 'enum_values': ['等比', '等差']},
     {'type': 'enum', 'field': 'riskPreference', 'enum_values': ['低频', '均衡', '高频']},
     {'type': 'float', 'field': 'adjustmentCoefficient', 'min_value': 0, 'max_value': 2}
@@ -177,6 +177,9 @@ ETF_POPULAR_LIST: Final[list] = [
 
 # 常用资金
 CAPITAL_PRESETS: Final[list] = [
+    {'value': 1000, 'label': '1千', 'popular': True},
+    {'value': 3000, 'label': '3千', 'popular': True},
+    {'value': 5000, 'label': '5千', 'popular': True},
     {'value': 10000, 'label': '1万', 'popular': True},
     {'value': 20000, 'label': '2万', 'popular': True},
     {'value': 50000, 'label': '5万', 'popular': True},
