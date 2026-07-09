@@ -233,7 +233,10 @@ def test_capital_utilization_rate_missing_fields():
 def test_benchmark_comparison_calculation(price_curve):
     """测试基准对比计算"""
     calc = MetricsCalculator()
-    benchmark = calc._calculate_benchmark(price_curve, 0.03)  # 3%总收益率
+    # 创建一个初始建仓交易记录，表示有实际投资
+    base_time = datetime(2025, 1, 10, 9, 30)
+    trade_records = [TradeRecord(base_time, 'BUY', 3.50, 100, 0.7, None, 100, 9650)]
+    benchmark = calc._calculate_benchmark(price_curve, 0.03, trade_records)
 
     # 持有收益率 = (3.53 - 3.50) / 3.50 ≈ 0.00857
     expected_hold_return = (3.53 - 3.50) / 3.50

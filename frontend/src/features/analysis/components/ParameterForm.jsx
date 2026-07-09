@@ -22,7 +22,7 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
   );
   const [totalCapital, setTotalCapital] = usePersistedState(
     "totalCapital",
-    initialValues?.totalCapital?.toString() || "100000",
+    initialValues?.totalCapital?.toString() || "10000",
   );
   const [gridType, setGridType] = usePersistedState(
     "gridType",
@@ -44,42 +44,31 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
   const [errors, setErrors] = useState({});
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
+  const [initialized, setInitialized] = useState(false);
 
-  // 当初始值变化时更新状态
+  // 当初始值变化时更新状态（只在首次加载时使用initialValues，之后保留用户输入）
   useEffect(() => {
-    if (initialValues) {
-      if (initialValues.etfCode && initialValues.etfCode !== etfCode) {
+    if (initialValues && !initialized) {
+      if (initialValues.etfCode) {
         setEtfCode(initialValues.etfCode);
       }
-      if (
-        initialValues.totalCapital &&
-        initialValues.totalCapital.toString() !== totalCapital
-      ) {
+      if (initialValues.totalCapital) {
         setTotalCapital(initialValues.totalCapital.toString());
       }
-      if (initialValues.gridType && initialValues.gridType !== gridType) {
+      if (initialValues.gridType) {
         setGridType(initialValues.gridType);
       }
-      if (
-        initialValues.riskPreference &&
-        initialValues.riskPreference !== riskPreference
-      ) {
+      if (initialValues.riskPreference) {
         setRiskPreference(initialValues.riskPreference);
       }
-      if (
-        initialValues.adjustmentCoefficient &&
-        initialValues.adjustmentCoefficient !== adjustmentCoefficient
-      ) {
+      if (initialValues.adjustmentCoefficient) {
         setAdjustmentCoefficient(initialValues.adjustmentCoefficient);
       }
+      setInitialized(true);
     }
   }, [
     initialValues,
-    etfCode,
-    totalCapital,
-    gridType,
-    riskPreference,
-    adjustmentCoefficient,
+    initialized,
     setEtfCode,
     setTotalCapital,
     setGridType,

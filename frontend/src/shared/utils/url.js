@@ -32,7 +32,7 @@ export const REVERSE_PARAM_MAPPINGS = {
 
 // 默认参数值
 export const DEFAULT_PARAMS = {
-  capital: "100000",
+  capital: "10000",
   grid: "geometric", // 对应"等比"
   risk: "balanced", // 对应"均衡"
   adjustment: "1.0", // 调节系数默认值
@@ -86,7 +86,7 @@ export const decodeAnalysisParams = (searchParams) => {
   const capital = searchParams.get("capital");
   if (capital) {
     const capitalNum = parseFloat(capital);
-    if (!isNaN(capitalNum) && capitalNum >= 10000 && capitalNum <= 1000000) {
+    if (!isNaN(capitalNum) && capitalNum >= 1000 && capitalNum <= 1000000) {
       params.totalCapital = capitalNum;
     }
   }
@@ -132,8 +132,8 @@ export const validateAndCompleteParams = (params) => {
     result.params.totalCapital = parseFloat(DEFAULT_PARAMS.capital);
   } else {
     const capital = parseFloat(params.totalCapital);
-    if (isNaN(capital) || capital < 10000 || capital > 1000000) {
-      result.errors.push("投资金额应在1万-100万之间");
+    if (isNaN(capital) || capital < 1000 || capital > 1000000) {
+      result.errors.push("投资金额应在1千-100万之间");
       result.params.totalCapital = parseFloat(DEFAULT_PARAMS.capital);
     }
   }

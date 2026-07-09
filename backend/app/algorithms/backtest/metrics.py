@@ -90,8 +90,8 @@ class MetricsCalculator:
         grid_trigger_rate = self._calculate_grid_trigger_rate(trade_records, grid_count)
         capital_utilization_rate = self._calculate_capital_utilization_rate(trade_records, equity_curve, initial_capital)
 
-        # 计算基准对比
-        benchmark = self._calculate_benchmark(price_curve, total_return)
+        # 计算基准对比（传递交易记录用于判断是否有实际投资）
+        benchmark = self._calculate_benchmark(price_curve, total_return, trade_records)
 
         metrics = PerformanceMetrics(
             total_return=total_return,
@@ -382,9 +382,15 @@ class MetricsCalculator:
         return max(0.0, min(1.0, utilization_rate))
 
     def _calculate_benchmark(self, price_curve: List[Dict],
-                           grid_return: float) -> BenchmarkComparison:
+                           grid_return: float,
+                           trade_records: List[TradeRecord]) -> BenchmarkComparison:
         """计算基准对比"""
         if len(price_curve) < 2:
+            return BenchmarkComparison(0.0, 0.0, 0.0)
+
+        # 如果没有任何交易（包括初始建仓），说明策略没有实际投资
+        # 此时基准收益和超额收益都应该为0（没有投资就没有对比意义）
+        if not trade_records:
             return BenchmarkComparison(0.0, 0.0, 0.0)
 
         initial_price = price_curve[0]['close']
