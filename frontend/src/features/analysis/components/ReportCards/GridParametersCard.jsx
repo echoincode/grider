@@ -16,6 +16,9 @@ import {
   Activity,
   Shield,
   AlertTriangle,
+  RefreshCw,
+  Clock,
+  Award,
 } from "lucide-react";
 import { formatCurrency, formatPercent, formatDate } from "@shared/utils";
 
@@ -37,6 +40,17 @@ const GridParametersCard = ({
     fund_allocation,
     risk_preference,
     calculation_method,
+    // [RECOVERY_STRATEGY] 解套模式专属字段
+    strategy_type,
+    existing_position,
+    existing_cost,
+    existing_market_value,
+    unrealized_loss,
+    unrealized_loss_ratio,
+    new_capital,
+    total_capital,
+    recovery_metrics,
+    step_config,
   } = gridStrategy;
 
   // 获取价格日期显示文本
@@ -61,6 +75,70 @@ const GridParametersCard = ({
 
   return (
     <div className="space-y-6">
+      {/* [RECOVERY_STRATEGY] 解套模式：回本策略分析卡片 */}
+      {strategy_type === "recovery" && recovery_metrics && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <RefreshCw className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900">回本策略分析</h4>
+              <p className="text-sm text-gray-600">基于非对称网格配置的成本摊薄方案</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">当前成本</div>
+              <div className="text-xl font-bold text-red-600">
+                {formatCurrency(existing_cost, etfInfo?.country, { maximumFractionDigits: 3 })}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">预期摊薄后成本</div>
+              <div className="text-xl font-bold text-green-600">
+                {formatCurrency(recovery_metrics.expected_avg_cost, etfInfo?.country, { maximumFractionDigits: 3 })}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">成本降低</div>
+              <div className="text-xl font-bold text-blue-600">
+                {formatCurrency(recovery_metrics.cost_reduction, etfInfo?.country, { maximumFractionDigits: 3 })}
+                <span className="text-base">({formatPercent(recovery_metrics.cost_reduction_ratio)})</span>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">回本概率</div>
+              <div className="text-xl font-bold text-purple-600">
+                {formatPercent(recovery_metrics.recovery_probability)}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 bg-white rounded-lg p-4">
+              <Clock className="w-6 h-6 text-orange-500" />
+              <div>
+                <div className="text-sm text-gray-600">预期回本时间</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {recovery_metrics.expected_recovery_days} 天
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-white rounded-lg p-4">
+              <Shield className="w-6 h-6 text-indigo-500" />
+              <div>
+                <div className="text-sm text-gray-600">最大预期浮亏</div>
+                <div className="text-lg font-bold text-indigo-900">
+                  {formatPercent(recovery_metrics.max_expected_drawdown)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 资金分配策略 */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
@@ -75,17 +153,22 @@ const GridParametersCard = ({
 
         {/* 资金分配概览 */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+          {/* [RECOVERY_STRATEGY] 解套模式：显示总资金 */}
           <div className="text-center p-4 bg-orange-50 rounded-lg">
             <div className="text-2xl font-bold text-orange-600 mb-1">
-              {formatCurrency(
-                inputParameters?.total_capital ||
-                  inputParameters?.totalCapital ||
-                  0,
-                etfInfo?.country,
-              )}
+              {strategy_type === "recovery" && total_capital
+                ? formatCurrency(total_capital, etfInfo?.country)
+                : formatCurrency(
+                    inputParameters?.total_capital ||
+                      inputParameters?.totalCapital ||
+                      0,
+                    etfInfo?.country,
+                  )}
             </div>
-            <div className="text-sm text-orange-700 font-medium">投资资金</div>
-            <div className="text-xs text-gray-600 mt-1">总投资资金量</div>
+            <div className="text-sm text-orange-700 font-medium">总资金</div>
+            <div className="text-xs text-gray-600 mt-1">
+              {strategy_type === "recovery" ? "原有持仓+新资金" : "总投资资金量"}
+            </div>
           </div>
 
           <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -228,6 +311,54 @@ const GridParametersCard = ({
             <p className="text-sm text-gray-600">网格数量、步长和类型设置</p>
           </div>
         </div>
+
+        {/* [RECOVERY_STRATEGY] 解套模式：非对称网格配置 */}
+        {strategy_type === "recovery" && step_config && grid_config.region_details && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 rounded-lg">
+            <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+              <Award className="w-4 h-4 text-purple-600" />
+              非对称网格配置（解套专属）
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-lg border-l-4 border-green-500">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">下方密集区</span>
+                  <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                    {grid_config.region_details.lower.count}个网格
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-green-600">
+                  {formatPercent(step_config.lower.step_ratio)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">{grid_config.region_details.lower.description}</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg border-l-4 border-blue-500">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">中部正常区</span>
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                    {grid_config.region_details.middle.count}个网格
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-blue-600">
+                  {formatPercent(step_config.middle.step_ratio)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">{grid_config.region_details.middle.description}</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg border-l-4 border-orange-500">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">上方稀疏区</span>
+                  <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
+                    {grid_config.region_details.upper.count}个网格
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-orange-600">
+                  {formatPercent(step_config.upper.step_ratio)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">{grid_config.region_details.upper.description}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="bg-gray-50 p-4 rounded-lg">

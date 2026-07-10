@@ -67,6 +67,10 @@ class ApiService {
    * ETF分析主接口
    */
   async analyzeETF(parameters) {
+    // [RECOVERY_STRATEGY] 解套模式调用专属接口
+    if (parameters.strategyType === "recovery") {
+      return this.post("/grid/analyze/recovery", parameters);
+    }
     return this.post("/grid/analyze", parameters);
   }
 
