@@ -227,6 +227,7 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
         riskPreference,
         adjustmentCoefficient: parseFloat(adjustmentCoefficient),
         strategyType: "normal",
+        strategyMode: "normal",
       };
     } else {
       // [RECOVERY_STRATEGY] 解套模式提交数据
@@ -239,6 +240,7 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
         riskPreference,
         adjustmentCoefficient: parseFloat(adjustmentCoefficient),
         strategyType: "recovery",
+        strategyMode: "recovery",
       };
     }
 

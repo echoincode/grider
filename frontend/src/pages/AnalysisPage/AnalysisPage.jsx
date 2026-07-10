@@ -85,6 +85,10 @@ const AnalysisPage = () => {
       if (response.success) {
         setAnalysisData(response.data);
 
+        // 更新URL参数（确保解套模式参数被正确保存）
+        const newSearchParams = encodeAnalysisParams(parameters);
+        setSearchParams(newSearchParams);
+
         // 保存分析历史记录
         saveAnalysisHistory({
           etfCode: parameters.etfCode,
@@ -93,6 +97,9 @@ const AnalysisPage = () => {
           timestamp: Date.now(),
           url: generateAnalysisURL(parameters.etfCode, parameters),
         });
+
+        // 更新当前参数
+        setCurrentParams(parameters);
       } else {
         throw new Error(response.error || "分析失败");
       }
@@ -211,7 +218,13 @@ const AnalysisPage = () => {
   const generateSEOData = () => {
     const etfName = analysisData?.etf_info?.name || `ETF ${etfCode}`;
     const title = `${etfName} - 智能网格交易策略分析 | ETFer.Top`;
-    const description = `${etfName}的专业网格交易策略分析，基于ATR算法计算最优网格参数，提供详细的收益预测和风险评估。投资金额：${currentParams?.totalCapital?.toLocaleString()}元，网格类型：${currentParams?.gridType}，频率偏好：${currentParams?.riskPreference}，调节系数：${currentParams?.adjustmentCoefficient}。`;
+    
+    const isRecovery = currentParams?.strategyMode === "recovery";
+    const capitalDesc = isRecovery 
+      ? `新投入资金：${currentParams?.newCapital?.toLocaleString()}元，持仓数量：${currentParams?.existingPosition?.toLocaleString()}股`
+      : `投资金额：${currentParams?.totalCapital?.toLocaleString()}元`;
+    
+    const description = `${etfName}的专业网格交易策略分析，基于ATR算法计算最优网格参数，提供详细的收益预测和风险评估。${capitalDesc}，网格类型：${currentParams?.gridType}，频率偏好：${currentParams?.riskPreference}，调节系数：${currentParams?.adjustmentCoefficient}。`;
 
     return { title, description };
   };
@@ -287,7 +300,14 @@ const AnalysisPage = () => {
               {/* 移动端参数信息显示 */}
               <div className="mt-2">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-                  <span>投资金额：{currentParams?.totalCapital?.toLocaleString()}元</span>
+                  {currentParams?.strategyMode === "recovery" ? (
+                    <>
+                      <span>新投入资金：{currentParams?.newCapital?.toLocaleString()}元</span>
+                      <span>持仓数量：{currentParams?.existingPosition?.toLocaleString()}股</span>
+                    </>
+                  ) : (
+                    <span>投资金额：{currentParams?.totalCapital?.toLocaleString()}元</span>
+                  )}
                   <span>网格类型：{currentParams?.gridType}</span>
                   <span>频率偏好：{currentParams?.riskPreference}</span>
                   <span>调节系数：{currentParams?.adjustmentCoefficient}</span>
@@ -314,7 +334,14 @@ const AnalysisPage = () => {
                     网格策略分析
                   </h1>
                   <p className="text-sm text-gray-600 truncate">
-                    投资金额：{currentParams?.totalCapital?.toLocaleString()}元 |
+                    {currentParams?.strategyMode === "recovery" ? (
+                      <>
+                        新投入资金：{currentParams?.newCapital?.toLocaleString()}元 |
+                        持仓数量：{currentParams?.existingPosition?.toLocaleString()}股 |
+                      </>
+                    ) : (
+                      <>投资金额：{currentParams?.totalCapital?.toLocaleString()}元 |</>
+                    )}
                     网格类型：{currentParams?.gridType} |
                     频率偏好：{currentParams?.riskPreference} |
                     调节系数：{currentParams?.adjustmentCoefficient}

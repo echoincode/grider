@@ -36,6 +36,11 @@ export const DEFAULT_PARAMS = {
   grid: "geometric", // 对应"等比"
   risk: "balanced", // 对应"均衡"
   adjustment: "1.0", // 调节系数默认值
+  strategyMode: "normal", // 策略模式：normal/recovery
+  strategyType: "normal", // 策略类型：normal/recovery（与strategyMode一致）
+  existingPosition: "10000", // 解套模式：现有持仓数量
+  existingCost: "1.500", // 解套模式：现有持仓成本
+  newCapital: "50000", // 解套模式：新投入资金
 };
 
 /**
@@ -46,9 +51,27 @@ export const DEFAULT_PARAMS = {
 export const encodeAnalysisParams = (params) => {
   const searchParams = new URLSearchParams();
 
-  // 资金参数
+  // 策略模式参数（strategyMode和strategyType保持一致）
+  const strategyType = params.strategyType || params.strategyMode;
+  if (strategyType !== undefined && strategyType !== null) {
+    searchParams.set("mode", strategyType);
+    searchParams.set("type", strategyType);
+  }
+
+  // 资金参数（普通模式）
   if (params.totalCapital !== undefined && params.totalCapital !== null) {
     searchParams.set("capital", params.totalCapital.toString());
+  }
+
+  // 解套模式参数
+  if (params.existingPosition !== undefined && params.existingPosition !== null) {
+    searchParams.set("pos", params.existingPosition.toString());
+  }
+  if (params.existingCost !== undefined && params.existingCost !== null) {
+    searchParams.set("cost", params.existingCost.toString());
+  }
+  if (params.newCapital !== undefined && params.newCapital !== null) {
+    searchParams.set("newCap", params.newCapital.toString());
   }
 
   // 网格类型参数
@@ -82,12 +105,46 @@ export const encodeAnalysisParams = (params) => {
 export const decodeAnalysisParams = (searchParams) => {
   const params = {};
 
-  // 解析资金参数
+  // 解析策略模式参数
+  const mode = searchParams.get("mode");
+  const type = searchParams.get("type");
+  const strategyType = type || mode;
+  if (strategyType) {
+    params.strategyMode = strategyType;
+    params.strategyType = strategyType;
+  }
+
+  // 解析资金参数（普通模式）
   const capital = searchParams.get("capital");
   if (capital) {
     const capitalNum = parseFloat(capital);
     if (!isNaN(capitalNum) && capitalNum >= 1000 && capitalNum <= 1000000) {
       params.totalCapital = capitalNum;
+    }
+  }
+
+  // 解析解套模式参数
+  const pos = searchParams.get("pos");
+  if (pos) {
+    const posNum = parseInt(pos);
+    if (!isNaN(posNum) && posNum > 0) {
+      params.existingPosition = posNum;
+    }
+  }
+
+  const cost = searchParams.get("cost");
+  if (cost) {
+    const costNum = parseFloat(cost);
+    if (!isNaN(costNum) && costNum > 0) {
+      params.existingCost = costNum;
+    }
+  }
+
+  const newCap = searchParams.get("newCap");
+  if (newCap) {
+    const newCapNum = parseFloat(newCap);
+    if (!isNaN(newCapNum) && newCapNum >= 1000 && newCapNum <= 1000000) {
+      params.newCapital = newCapNum;
     }
   }
 
@@ -127,14 +184,65 @@ export const validateAndCompleteParams = (params) => {
     params: { ...params },
   };
 
-  // 验证并补全资金参数
-  if (params.totalCapital === undefined || params.totalCapital === null) {
-    result.params.totalCapital = parseFloat(DEFAULT_PARAMS.capital);
+  // 验证并补全策略模式参数
+  if (!params.strategyMode) {
+    result.params.strategyMode = DEFAULT_PARAMS.strategyMode;
+    result.params.strategyType = DEFAULT_PARAMS.strategyType;
+  } else if (!["normal", "recovery"].includes(params.strategyMode)) {
+    result.errors.push("策略模式参数无效");
+    result.params.strategyMode = DEFAULT_PARAMS.strategyMode;
+    result.params.strategyType = DEFAULT_PARAMS.strategyType;
   } else {
-    const capital = parseFloat(params.totalCapital);
-    if (isNaN(capital) || capital < 1000 || capital > 1000000) {
-      result.errors.push("投资金额应在1千-100万之间");
+    // 确保 strategyType 和 strategyMode 保持一致
+    result.params.strategyType = params.strategyMode;
+  }
+
+  // 验证并补全资金参数（普通模式）
+  if (params.strategyMode !== "recovery") {
+    if (params.totalCapital === undefined || params.totalCapital === null) {
       result.params.totalCapital = parseFloat(DEFAULT_PARAMS.capital);
+    } else {
+      const capital = parseFloat(params.totalCapital);
+      if (isNaN(capital) || capital < 1000 || capital > 1000000) {
+        result.errors.push("投资金额应在1千-100万之间");
+        result.params.totalCapital = parseFloat(DEFAULT_PARAMS.capital);
+      }
+    }
+  }
+
+  // 验证并补全解套模式参数
+  if (params.strategyMode === "recovery") {
+    // 持仓数量
+    if (params.existingPosition === undefined || params.existingPosition === null) {
+      result.params.existingPosition = parseInt(DEFAULT_PARAMS.existingPosition);
+    } else {
+      const pos = parseInt(params.existingPosition);
+      if (isNaN(pos) || pos <= 0) {
+        result.errors.push("持仓数量必须大于0");
+        result.params.existingPosition = parseInt(DEFAULT_PARAMS.existingPosition);
+      }
+    }
+
+    // 持仓成本
+    if (params.existingCost === undefined || params.existingCost === null) {
+      result.params.existingCost = parseFloat(DEFAULT_PARAMS.existingCost);
+    } else {
+      const cost = parseFloat(params.existingCost);
+      if (isNaN(cost) || cost <= 0) {
+        result.errors.push("持仓成本必须大于0");
+        result.params.existingCost = parseFloat(DEFAULT_PARAMS.existingCost);
+      }
+    }
+
+    // 新投入资金
+    if (params.newCapital === undefined || params.newCapital === null) {
+      result.params.newCapital = parseFloat(DEFAULT_PARAMS.newCapital);
+    } else {
+      const newCap = parseFloat(params.newCapital);
+      if (isNaN(newCap) || newCap < 1000) {
+        result.errors.push("新投入资金不能少于1000元");
+        result.params.newCapital = parseFloat(DEFAULT_PARAMS.newCapital);
+      }
     }
   }
 
