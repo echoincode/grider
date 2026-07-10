@@ -239,8 +239,8 @@ export const validateAndCompleteParams = (params) => {
       result.params.newCapital = parseFloat(DEFAULT_PARAMS.newCapital);
     } else {
       const newCap = parseFloat(params.newCapital);
-      if (isNaN(newCap) || newCap < 1000) {
-        result.errors.push("新投入资金不能少于1000元");
+      if (isNaN(newCap) || newCap < 1000 || newCap > 1000000) {
+        result.errors.push("新投入资金应在1千-100万之间");
         result.params.newCapital = parseFloat(DEFAULT_PARAMS.newCapital);
       }
     }

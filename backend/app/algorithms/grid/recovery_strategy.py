@@ -333,8 +333,8 @@ class RecoveryGridStrategy:
             # 计算底仓比例
             base_position_ratio = base_position_amount / total_capital
 
-            # 计算网格资金
-            grid_trading_amount = available_capital - base_position_amount
+            # 计算网格资金（确保不小于0）
+            grid_trading_amount = max(0.0, available_capital - base_position_amount)
 
             # 生成网格资金分配详情
             grid_funds = []
@@ -485,10 +485,18 @@ class RecoveryGridStrategy:
         middle_grids = sum(1 for p in price_levels if boundaries['middle_lower'] < p <= boundaries['middle_upper'])
         upper_grids = sum(1 for p in price_levels if p > boundaries['middle_upper'])
 
+        # 计算平均步长（用于保持与普通模式数据结构一致）
+        avg_step_ratio = (step_config['lower']['step_ratio'] * lower_grids +
+                          step_config['middle']['step_ratio'] * middle_grids +
+                          step_config['upper']['step_ratio'] * upper_grids) / len(price_levels) if len(price_levels) > 0 else step_config['middle']['step_ratio']
+        avg_step_size = avg_step_ratio * current_price
+
         return {
             'count': len(price_levels),
             'type': '非对称网格',
             'single_trade_quantity': step_config.get('single_trade_quantity', 100),
+            'step_ratio': avg_step_ratio,
+            'step_size': round(avg_step_size, 3),
             'region_counts': {
                 'lower': lower_grids,
                 'middle': middle_grids,

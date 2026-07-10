@@ -88,7 +88,7 @@ export default function OverviewTab({
             <h4 className="font-semibold text-green-900">网格价格区间</h4>
           </div>
           <div className="text-xl font-bold text-down-900 mb-1">
-            {formatCurrency(gridStrategy?.price_range?.lower, etfInfo?.country, { maximumFractionDigits: 3 })} - {gridStrategy?.price_range?.upper.toFixed(3)}
+            {formatCurrency(gridStrategy?.price_range?.lower || 0, etfInfo?.country, { maximumFractionDigits: 3 })} - {(gridStrategy?.price_range?.upper || 0).toFixed(3)}
           </div>
           <p className="text-green-700 text-sm">网格交易价格范围</p>
         </div>
@@ -110,13 +110,13 @@ export default function OverviewTab({
                 %
               </div>
               <p className="text-purple-700 text-sm">
-                步长比例 · {formatCurrency(gridStrategy?.grid_config?.step_size, etfInfo?.country, { maximumFractionDigits: 3 })}
+                步长比例 · {formatCurrency(gridStrategy?.grid_config?.step_size || 0, etfInfo?.country, { maximumFractionDigits: 3 })}
               </p>
             </>
           ) : (
             <>
               <div className="text-xl font-bold text-purple-900 mb-1">
-                {formatCurrency(gridStrategy?.grid_config?.step_size, etfInfo?.country, { maximumFractionDigits: 3 })}
+                {formatCurrency(gridStrategy?.grid_config?.step_size || 0, etfInfo?.country, { maximumFractionDigits: 3 })}
               </div>
               <p className="text-purple-700 text-sm">
                 步长价格 ·{" "}
@@ -237,9 +237,9 @@ export default function OverviewTab({
                 <div>
                   <span className="font-medium text-blue-900">投资配置</span>
                   <div className="mt-1 space-y-0.5 text-blue-800">
-                    <div>• 总投资资金：{formatCurrency(inputParameters?.total_capital, etfInfo?.country)}</div>
-                    <div>• 底仓资金：{formatCurrency(gridStrategy?.fund_allocation?.base_position_amount, etfInfo?.country)}</div>
-                    <div>• 网格资金：{formatCurrency(gridStrategy?.fund_allocation?.grid_trading_amount, etfInfo?.country)}</div>
+                    <div>• 总投资资金：{formatCurrency(gridStrategy?.total_capital || inputParameters?.total_capital || inputParameters?.totalCapital || 0, etfInfo?.country)}</div>
+                    <div>• 底仓资金：{formatCurrency(gridStrategy?.fund_allocation?.base_position_amount || 0, etfInfo?.country)}</div>
+                    <div>• 网格资金：{formatCurrency(gridStrategy?.fund_allocation?.grid_trading_amount || 0, etfInfo?.country)}</div>
                     <div>• 网格资金利用率：{((gridStrategy?.fund_allocation?.grid_fund_utilization_rate || 0) * 100).toFixed(1)}%</div>
                   </div>
                 </div>
@@ -249,10 +249,10 @@ export default function OverviewTab({
                 <div>
                   <span className="font-medium text-blue-900">策略特征</span>
                   <div className="mt-1 space-y-0.5 text-blue-800">
-                    <div>• 价格区间：{formatCurrency(gridStrategy?.price_range?.lower, etfInfo?.country, { maximumFractionDigits: 3 })} - {(gridStrategy?.price_range?.upper || 0).toFixed(3)}</div>
-                    <div>• 网格步长：{formatCurrency(gridStrategy?.grid_config?.step_size, etfInfo?.country, { maximumFractionDigits: 3 })} ({((gridStrategy?.grid_config?.step_ratio || 0) * 100).toFixed(2)}%)</div>
+                    <div>• 价格区间：{formatCurrency(gridStrategy?.price_range?.lower || 0, etfInfo?.country, { maximumFractionDigits: 3 })} - {(gridStrategy?.price_range?.upper || 0).toFixed(3)}</div>
+                    <div>• 网格步长：{formatCurrency(gridStrategy?.grid_config?.step_size || 0, etfInfo?.country, { maximumFractionDigits: 3 })} ({((gridStrategy?.grid_config?.step_ratio || 0) * 100).toFixed(2)}%)</div>
                     <div>• 单笔股数：{gridStrategy?.fund_allocation?.single_trade_quantity || 0}股</div>
-                    <div>• 预估单笔收益：{formatCurrency(gridStrategy?.fund_allocation?.expected_profit_per_trade, etfInfo?.country, { maximumFractionDigits: 2 })}</div>
+                    <div>• 预估单笔收益：{formatCurrency(gridStrategy?.fund_allocation?.expected_profit_per_trade || 0, etfInfo?.country, { maximumFractionDigits: 2 })}</div>
                   </div>
                 </div>
               </div>
