@@ -37,10 +37,10 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
     initialValues?.adjustmentCoefficient || 1.0,
   );
 
-  // [RECOVERY_STRATEGY] 新增：策略模式状态
+  // [RECOVERY_STRATEGY] 新增：策略模式状态（暂不开放，默认普通模式）
   const [strategyMode, setStrategyMode] = usePersistedState(
     "strategyMode",
-    initialValues?.strategyMode || "normal",
+    "normal",
   );
   const [existingPosition, setExistingPosition] = usePersistedState(
     "existingPosition",
@@ -53,6 +53,10 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
   const [newCapital, setNewCapital] = usePersistedState(
     "newCapital",
     initialValues?.newCapital?.toString() || "50000",
+  );
+  const [targetRecoveryDays, setTargetRecoveryDays] = usePersistedState(
+    "targetRecoveryDays",
+    initialValues?.targetRecoveryDays?.toString() || "60",
   );
   const [recoveryPanelExpanded, setRecoveryPanelExpanded] = useState(true);
 
@@ -96,6 +100,9 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
       if (initialValues.newCapital) {
         setNewCapital(initialValues.newCapital.toString());
       }
+      if (initialValues.targetRecoveryDays) {
+        setTargetRecoveryDays(initialValues.targetRecoveryDays.toString());
+      }
       setInitialized(true);
     }
   }, [
@@ -110,6 +117,7 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
     setExistingPosition,
     setExistingCost,
     setNewCapital,
+    setTargetRecoveryDays,
   ]);
 
   // 获取热门ETF列表
@@ -198,6 +206,13 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
         newErrors.newCapital = "新投入资金不能少于1000元";
       }
 
+      const recoveryDays = parseInt(targetRecoveryDays);
+      if (!recoveryDays || isNaN(recoveryDays) || recoveryDays <= 0) {
+        newErrors.targetRecoveryDays = "目标回本天数必须大于0";
+      } else if (recoveryDays > 730) {
+        newErrors.targetRecoveryDays = "目标回本天数不能超过2年";
+      }
+
       // 检查是否处于套牢状态
       if (etfInfo && cost > 0 && etfInfo.current_price > 0) {
         if (cost <= etfInfo.current_price) {
@@ -236,6 +251,7 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
         existingPosition: parseInt(existingPosition),
         existingCost: parseFloat(existingCost),
         newCapital: parseFloat(newCapital),
+        targetRecoveryDays: parseInt(targetRecoveryDays),
         gridType,
         riskPreference,
         adjustmentCoefficient: parseFloat(adjustmentCoefficient),
@@ -290,7 +306,7 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* [RECOVERY_STRATEGY] 新增：策略模式切换 */}
+        {/* [RECOVERY_STRATEGY] 策略模式切换（暂不开放）
         <div className="bg-gray-50 rounded-lg p-4">
           <label className="block text-sm font-medium text-gray-700 mb-3">策略模式</label>
           <div className="flex gap-6">
@@ -322,7 +338,7 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
               适用于持仓套牢场景，通过非对称网格配置快速摊低成本
             </p>
           )}
-        </div>
+        </div> */}
 
         <ETFSelector
           value={etfCode}
@@ -448,6 +464,29 @@ const ParameterForm = ({ onAnalysis, loading, initialValues }) => {
                   {errors.newCapital && (
                     <p className="mt-1 text-xs text-red-500">{errors.newCapital}</p>
                   )}
+                </div>
+
+                {/* 目标回本天数 */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                    目标回本天数（天）
+                  </h3>
+                  <input
+                    type="number"
+                    value={targetRecoveryDays}
+                    onChange={(e) => setTargetRecoveryDays(e.target.value)}
+                    placeholder="请输入目标回本天数"
+                    min="1"
+                    max="730"
+                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.targetRecoveryDays ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {errors.targetRecoveryDays && (
+                    <p className="mt-1 text-xs text-red-500">{errors.targetRecoveryDays}</p>
+                  )}
+                  <p className="mt-2 text-xs text-gray-500">系统将根据您的目标天数自动调整策略配置</p>
                 </div>
               </div>
             )}

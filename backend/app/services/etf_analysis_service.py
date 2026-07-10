@@ -454,7 +454,8 @@ class ETFAnalysisService:
     # [RECOVERY_STRATEGY] 新增：解套回本策略分析入口
     def analyze_recovery_strategy(self, etf_code: str, existing_position: int,
                                   existing_cost: float, new_capital: float,
-                                  grid_type: str, risk_preference: str,
+                                  target_recovery_days: int = 60,
+                                  grid_type: str = '等比', risk_preference: str = '均衡',
                                   adjustment_coefficient: float = 1.0) -> Dict:
         """
         套牢回本策略分析入口
@@ -464,6 +465,7 @@ class ETFAnalysisService:
             existing_position: 现有持仓数量
             existing_cost: 现有持仓成本价
             new_capital: 新投入资金
+            target_recovery_days: 目标回本天数，默认60天
             grid_type: 网格类型 ('等差' 或 '等比')
             risk_preference: 频率偏好 ('低频', '均衡', '高频')
             adjustment_coefficient: 调节系数 (0-2)，默认1.0
@@ -474,6 +476,7 @@ class ETFAnalysisService:
         try:
             logger.info(f"开始解套回本策略分析: {etf_code}, 现有持仓{existing_position}股, "
                        f"成本{existing_cost}, 新增资金{new_capital}, "
+                       f"目标回本天数{target_recovery_days}, "
                        f"{grid_type}网格, {risk_preference}, 调节系数{adjustment_coefficient}")
             
             # 1. 获取ETF基础信息
@@ -496,7 +499,7 @@ class ETFAnalysisService:
                 'existing_position': existing_position,
                 'existing_cost': existing_cost,
                 'new_capital': new_capital,
-                'target_recovery_days': 60,
+                'target_recovery_days': target_recovery_days,
                 'max_additional_drawdown': 0.15
             }
             recovery_strategy = RecoveryGridStrategy(recovery_config)

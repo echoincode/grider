@@ -73,6 +73,9 @@ export const encodeAnalysisParams = (params) => {
   if (params.newCapital !== undefined && params.newCapital !== null) {
     searchParams.set("newCap", params.newCapital.toString());
   }
+  if (params.targetRecoveryDays !== undefined && params.targetRecoveryDays !== null) {
+    searchParams.set("recoveryDays", params.targetRecoveryDays.toString());
+  }
 
   // 网格类型参数
   if (params.gridType) {
@@ -145,6 +148,14 @@ export const decodeAnalysisParams = (searchParams) => {
     const newCapNum = parseFloat(newCap);
     if (!isNaN(newCapNum) && newCapNum >= 1000 && newCapNum <= 1000000) {
       params.newCapital = newCapNum;
+    }
+  }
+
+  const recoveryDays = searchParams.get("recoveryDays");
+  if (recoveryDays) {
+    const recoveryDaysNum = parseInt(recoveryDays);
+    if (!isNaN(recoveryDaysNum) && recoveryDaysNum > 0 && recoveryDaysNum <= 730) {
+      params.targetRecoveryDays = recoveryDaysNum;
     }
   }
 
@@ -242,6 +253,17 @@ export const validateAndCompleteParams = (params) => {
       if (isNaN(newCap) || newCap < 1000 || newCap > 1000000) {
         result.errors.push("新投入资金应在1千-100万之间");
         result.params.newCapital = parseFloat(DEFAULT_PARAMS.newCapital);
+      }
+    }
+
+    // 目标回本天数
+    if (params.targetRecoveryDays === undefined || params.targetRecoveryDays === null) {
+      result.params.targetRecoveryDays = parseInt(DEFAULT_PARAMS.targetRecoveryDays || 60);
+    } else {
+      const recoveryDays = parseInt(params.targetRecoveryDays);
+      if (isNaN(recoveryDays) || recoveryDays <= 0 || recoveryDays > 730) {
+        result.errors.push("目标回本天数应在1-730天之间");
+        result.params.targetRecoveryDays = parseInt(DEFAULT_PARAMS.targetRecoveryDays || 60);
       }
     }
   }

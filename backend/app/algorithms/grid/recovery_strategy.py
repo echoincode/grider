@@ -133,6 +133,10 @@ class RecoveryGridStrategy:
         - 下方密集区（当前价格以下）：小步长 = 正常步长 × 0.5，多买低价快速摊低成本
         - 中部正常区（当前价格附近）：正常步长，保持流动性
         - 上方稀疏区（接近成本价）：大步长 = 正常步长 × 1.5 ~ 2.0，等待解套卖出
+
+        根据目标回本天数动态调整步长：
+        - 目标天数越短，步长越小，交易越频繁
+        - 目标天数越长，步长越大，交易越稀疏
         """
         # 基础风险系数（根据频率偏好）
         default_risk_multipliers = {
@@ -151,6 +155,14 @@ class RecoveryGridStrategy:
         atr_value = atr_ratio * current_price
         base_step_size = atr_value * risk_multiplier
         base_step_ratio = base_step_size / current_price
+
+        # 根据目标回本天数调整步长
+        # 默认回本天数60天作为基准
+        # 目标天数 < 60天：需要更小步长，更快回本
+        # 目标天数 > 60天：可以更大步长，更稳健
+        target_factor = 60.0 / max(1, self.target_recovery_days)
+        base_step_ratio *= target_factor
+        base_step_size = base_step_ratio * current_price
 
         # 计算各区域步长
         # 下方密集区：小步长，快速摊低成本
@@ -445,15 +457,8 @@ class RecoveryGridStrategy:
         cost_reduction = self.existing_cost - expected_avg_cost
         cost_reduction_ratio = cost_reduction / self.existing_cost
 
-        # 计算预期回本时间
-        # 基于历史波动率估算价格回到成本价的时间
-        daily_volatility = atr_ratio * np.sqrt(252)
-        required_return = cost_reduction_ratio
-
-        if daily_volatility > 0:
-            expected_recovery_days = int(np.ceil(required_return / (daily_volatility / np.sqrt(252))))
-        else:
-            expected_recovery_days = self.target_recovery_days
+        # 使用用户设定的目标回本天数作为预期回本时间
+        expected_recovery_days = self.target_recovery_days
 
         # 计算最大预期浮亏
         # 假设价格跌到最低网格点
@@ -461,8 +466,22 @@ class RecoveryGridStrategy:
         max_expected_drawdown = (min_price - expected_avg_cost) / expected_avg_cost
 
         # 计算回本概率
-        # 基于历史波动特征估算
-        recovery_probability = min(0.95, max(0.5, 1 - max_expected_drawdown * 2))
+        # 根据目标回本天数和当前市场条件，计算在目标时间内回本的概率
+        # 核心逻辑：
+        # 1. 计算需要的日均收益率：(预期摊薄成本 - 当前价) / 当前价 / 目标天数
+        # 2. 根据历史波动率，计算达到目标收益率的概率
+        if expected_avg_cost > current_price and atr_ratio > 0:
+            required_daily_return = ((expected_avg_cost - current_price) / current_price) / expected_recovery_days
+            daily_std = atr_ratio
+            
+            z_score = required_daily_return / daily_std if daily_std > 0 else 0
+            recovery_probability = min(0.99, max(0.2, 0.5 + 0.35 * (1 - z_score)))
+            
+            # 如果目标过于激进（z_score太大），降低概率
+            if z_score > 3:
+                recovery_probability = max(0.1, recovery_probability - (z_score - 3) * 0.1)
+        else:
+            recovery_probability = 0.95 if expected_avg_cost <= current_price else 0.7
 
         return {
             'expected_avg_cost': round(expected_avg_cost, 3),

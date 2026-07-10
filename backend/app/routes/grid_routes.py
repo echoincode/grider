@@ -111,6 +111,7 @@ def analyze_recovery_strategy():
         existing_position = int(data['existingPosition'])
         existing_cost = float(data['existingCost'])
         new_capital = float(data['newCapital'])
+        target_recovery_days = int(data.get('targetRecoveryDays', 60))
         grid_type = data.get('gridType', '等比')
         risk_preference = data.get('riskPreference', '均衡')
         adjustment_coefficient = float(data.get('adjustmentCoefficient', 1.0))
@@ -144,6 +145,7 @@ def analyze_recovery_strategy():
             existing_position=existing_position,
             existing_cost=existing_cost,
             new_capital=new_capital,
+            target_recovery_days=target_recovery_days,
             grid_type=grid_type,
             risk_preference=risk_preference,
             adjustment_coefficient=adjustment_coefficient
