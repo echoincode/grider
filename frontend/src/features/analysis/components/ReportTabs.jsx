@@ -5,7 +5,7 @@ import { Eye, ThermometerSun, Grid3X3, TrendingUp } from "lucide-react";
  * 报告标签页导航组件
  * 负责标签页的导航和切换
  */
-export default function ReportTabs({ activeTab, onTabChange, strategyType }) {
+export default function ReportTabs({ activeTab, onTabChange }) {
   const [scrollState, setScrollState] = useState({
     hasLeftShadow: false,
     hasRightShadow: false
@@ -27,10 +27,8 @@ export default function ReportTabs({ activeTab, onTabChange, strategyType }) {
   }, []);
 
   useEffect(() => {
-    // 初始检查滚动位置
     checkScrollPosition();
     
-    // 监听窗口大小变化
     const handleResize = () => {
       checkScrollPosition();
     };
@@ -42,7 +40,6 @@ export default function ReportTabs({ activeTab, onTabChange, strategyType }) {
     };
   }, [checkScrollPosition]);
 
-  // [RECOVERY_STRATEGY] 解套模式下隐藏回测标签页
   const tabs = [
     { id: "overview", label: "概览", icon: <Eye className="w-4 h-4" /> },
     {
@@ -55,12 +52,11 @@ export default function ReportTabs({ activeTab, onTabChange, strategyType }) {
       label: "网格策略",
       icon: <Grid3X3 className="w-4 h-4" />,
     },
-    // [RECOVERY_STRATEGY] 解套模式不支持回测，隐藏回测标签
-    ...(strategyType !== 'recovery' ? [{
+    {
       id: "backtest",
       label: "回测分析",
       icon: <TrendingUp className="w-4 h-4" />,
-    }] : []),
+    },
   ];
 
   const getShadowClass = () => {

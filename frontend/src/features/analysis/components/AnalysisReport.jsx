@@ -105,7 +105,7 @@ const AnalysisReport = ({
     <div className="space-y-6">
       {/* 标签页导航 */}
       <div className="bg-white rounded-xl shadow-lg">
-        <ReportTabs activeTab={activeTab} onTabChange={setActiveTab} strategyType={input_parameters?.strategy_type} />
+        <ReportTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="p-6">
           {/* 概览标签页 */}
