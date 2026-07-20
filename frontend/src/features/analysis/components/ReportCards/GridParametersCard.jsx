@@ -15,6 +15,7 @@ import {
   Zap,
   Activity,
   AlertTriangle,
+  Shield,
 } from "lucide-react";
 import { formatCurrency, formatPercent, formatDate } from "@shared/utils";
 
