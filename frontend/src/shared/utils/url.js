@@ -39,6 +39,40 @@ export const DEFAULT_PARAMS = {
 };
 
 /**
+ * 解析分析页面URL
+ * @param {string} pathname - URL路径
+ * @param {string} search - URL查询字符串
+ * @returns {Object} 解析结果，包含etfCode、params和isValid
+ */
+export const parseAnalysisURL = (pathname, search) => {
+  const result = {
+    etfCode: null,
+    params: {},
+    isValid: false,
+  };
+
+  const pathMatch = pathname.match(/\/analysis\/([a-zA-Z0-9]+)/);
+  if (!pathMatch) {
+    return result;
+  }
+
+  const etfCode = pathMatch[1];
+  if (!validateETFCode(etfCode)) {
+    return result;
+  }
+
+  result.etfCode = etfCode;
+
+  if (search && search.startsWith("?")) {
+    const searchParams = new URLSearchParams(search);
+    result.params = decodeAnalysisParams(searchParams);
+  }
+
+  result.isValid = true;
+  return result;
+};
+
+/**
  * 将分析参数编码为URL查询参数
  * @param {Object} params - 分析参数对象
  * @returns {URLSearchParams} URL查询参数对象
