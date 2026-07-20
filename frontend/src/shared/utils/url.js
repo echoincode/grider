@@ -174,7 +174,7 @@ export const validateAndCompleteParams = (params) => {
  * @param {Object} params - 分析参数对象
  * @returns {string} 完整的分析页面URL
  */
-export const generateAnalysisUrl = (etfCode, params) => {
+export const generateAnalysisURL = (etfCode, params) => {
   const searchParams = encodeAnalysisParams(params);
   return `/analysis/${etfCode}?${searchParams.toString()}`;
 };
